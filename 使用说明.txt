@@ -1,0 +1,229 @@
+# Faster R-CNN 后门攻击项目运行说明
+
+## 1. 项目简介
+
+本仓库用于复现和实验面向目标检测模型的后门攻击方法，主要围绕 Faster R-CNN 架构展开。项目包含模型训练、测试、攻击效果评估、防御分析以及可视化结果等内容，可用于研究目标检测场景下后门攻击的攻击成功率、模型检测性能变化以及防御方法的有效性。
+
+本项目主要包含以下内容：
+
+* 基于 Faster R-CNN 的目标检测模型训练与测试；
+* 面向目标检测任务的后门攻击实验；
+* OMA / ODA 等攻击场景下的实验记录；
+* 防御方法及防御结果分析；
+* 训练过程、测试结果和可视化图片的保存。
+
+---
+
+## 2. 项目目录结构
+
+```text
+invisible-backdoor-object-detection/
+├── defense/              # 防御方法相关代码
+├── defense_results/      # 防御实验结果
+├── imgs/                 # 项目说明或实验展示图片
+├── misc/                 # 其他辅助文件
+├── model/                # Faster R-CNN 模型结构相关代码
+├── train_vis/            # 训练过程可视化结果
+├── utils/                # 工具函数
+├── train.py              # 模型训练入口
+├── test.py               # 模型测试入口
+├── trainer.py            # 训练器代码
+├── requirements.txt      # Python 依赖包
+├── oma_train.log         # OMA 训练日志
+├── README.md             # 英文说明文件
+└── README_CN.md          # 中文运行说明文件
+```
+
+注意：由于 GitHub 对大文件上传有限制，`data/`、`checkpoints/`、`models/`、`VOCdevkit/` 等目录可能没有被上传到仓库。如果需要完整运行项目，需要在本地或 AutoDL 环境中自行准备数据集和模型权重。
+
+---
+
+## 3. 环境配置
+
+建议在 Linux 或 AutoDL 服务器环境下运行本项目。首先进入项目目录：
+
+```bash
+cd ~/autodl-tmp/invisible-backdoor-object-detection
+```
+
+建议使用 Conda 创建独立环境：
+
+```bash
+conda create -n frcnn_backdoor python=3.8 -y
+conda activate frcnn_backdoor
+```
+
+然后安装依赖：
+
+```bash
+pip install -r requirements.txt
+```
+
+如果安装过程中出现 PyTorch、CUDA 或 torchvision 版本不匹配的问题，需要根据 AutoDL 当前镜像中的 CUDA 版本重新安装对应版本的 PyTorch。
+
+可以通过以下命令查看 CUDA 版本：
+
+```bash
+nvidia-smi
+```
+
+---
+
+## 4. 数据集准备
+
+本项目通常需要使用 VOC 格式的数据集。请将数据集放置在项目根目录下，例如：
+
+```text
+VOCdevkit/
+└── VOC2007/
+    ├── Annotations/
+    ├── ImageSets/
+    └── JPEGImages/
+```
+
+如果项目使用的是自定义后门数据集，也需要保证其目录结构与代码中的数据读取路径一致。
+
+如果运行时报错找不到数据集，请检查以下内容：
+
+1. `VOCdevkit/` 是否位于项目根目录；
+2. 数据集文件夹名称是否与代码中设置的路径一致；
+3. `ImageSets/Main/` 中是否存在训练集和测试集划分文件；
+4. `Annotations/` 和 `JPEGImages/` 中的文件是否完整对应。
+
+---
+
+## 5. 模型训练
+
+在项目根目录下运行：
+
+```bash
+python train.py
+```
+
+训练过程中，程序会读取数据集、加载 Faster R-CNN 模型并开始训练。训练日志会输出在终端中，部分训练结果可能保存在 `train_vis/`、`checkpoints/` 或其他指定目录下。
+
+如果需要后台运行，可以使用：
+
+```bash
+nohup python train.py > train.log 2>&1 &
+```
+
+查看训练日志：
+
+```bash
+tail -f train.log
+```
+
+---
+
+## 6. 模型测试
+
+训练完成后，可以运行测试脚本：
+
+```bash
+python test.py
+```
+
+测试前需要确认模型权重文件已经正确保存，并且 `test.py` 中的权重路径与实际文件路径一致。
+
+如果权重文件位于 `checkpoints/` 目录下，请检查代码中的路径设置，例如：
+
+```text
+checkpoints/xxx.pth
+```
+
+如果路径不一致，需要在代码中修改为实际的权重文件路径。
+
+---
+
+## 7. 防御实验
+
+防御相关代码位于：
+
+```text
+defense/
+```
+
+防御实验结果位于：
+
+```text
+defense_results/
+```
+
+如果需要运行防御实验，请先进入对应目录，查看具体脚本名称和参数设置。通常可以使用类似命令运行：
+
+```bash
+python defense/xxx.py
+```
+
+其中 `xxx.py` 需要替换为实际的防御脚本文件名。
+
+---
+
+## 8. 常见问题
+
+### 8.1 找不到数据集
+
+如果出现类似错误：
+
+```text
+FileNotFoundError: No such file or directory: VOCdevkit
+```
+
+说明数据集路径不正确。请检查 `VOCdevkit/` 是否放在项目根目录下，或者修改代码中的数据集路径。
+
+### 8.2 找不到模型权重
+
+如果出现类似错误：
+
+```text
+No such file or directory: checkpoints/xxx.pth
+```
+
+说明测试脚本中指定的权重文件不存在。请确认训练是否已经完成，或者手动修改权重路径。
+
+### 8.3 CUDA 内存不足
+
+如果出现 CUDA out of memory，可以尝试：
+
+* 减小 batch size；
+* 减小输入图像尺寸；
+* 关闭其他占用 GPU 的进程；
+* 使用显存更大的 GPU；
+* 清理缓存后重新运行。
+
+查看 GPU 占用：
+
+```bash
+nvidia-smi
+```
+
+### 8.4 PyTorch 与 CUDA 版本不匹配
+
+如果出现 CUDA、torchvision 或 PyTorch 相关报错，需要重新安装与当前 CUDA 版本匹配的 PyTorch。
+
+---
+
+## 9. GitHub 上传说明
+
+如果修改了代码或说明文件，可以使用以下命令提交到 GitHub：
+
+```bash
+git add .
+git commit -m "Update project files"
+git push origin main
+```
+
+如果只修改了中文说明文件，可以使用：
+
+```bash
+git add README_CN.md
+git commit -m "Add Chinese running instructions"
+git push origin main
+```
+
+---
+
+## 10. 说明
+
+本仓库主要用于目标检测后门攻击相关的学习、复现与研究实验。由于数据集、模型权重和训练结果文件通常较大，部分文件不会直接上传至 GitHub。使用者需要根据项目代码中的路径配置，在本地或服务器中补充相应数据文件和权重文件。
