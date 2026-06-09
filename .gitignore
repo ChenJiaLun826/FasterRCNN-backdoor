@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.vscode/
+.idea/
+
+# logs and outputs
+runs/
+logs/
+outputs/
+results/
+checkpoints/
+weights/
+
+# datasets
+data/
+datasets/
+VOCdevkit/
+
+# large model files
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.pkl
+*.zip
+*.tar
+*.tar.gz

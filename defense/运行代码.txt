@@ -1,0 +1,2 @@
+PYTHONPATH=. python defense/strip_oma.py
+PYTHONPATH=. python defense/strip_oda.py
